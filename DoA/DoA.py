@@ -36,12 +36,12 @@ if __name__ == "__main__":
         source_index = int(node_names[0])
         mic_index = int(node_names[1])
 
-        # mic_indexから円形マイク位置作成
+        # Create circular microphone positions from mic_index
         mic_position_str = coords[mic_index]
         mic_position = [float(x) for x in mic_position_str][1:3]
         position_circle_xy = pra.beamforming.circular_2D_array(center=mic_position, M=mic_num, phi0=0, radius=mic_radius)
 
-        # 正解方向の計算
+        # Calculate the correct direction
         source_position_str = coords[source_index]
         source_position = [float(x) for x in source_position_str][1:3]
         radian = math.atan2(source_position[1] - mic_position[1], source_position[0] - mic_position[0])
@@ -49,8 +49,8 @@ if __name__ == "__main__":
             radian += 2*math.pi
         degree_coords = radian * (180 / math.pi)
 
-        # doa計算(複数アルゴリズム)
-        # doaより予測方向算出
+        # DoA calculation (multiple algorithms)
+        # Calculate the predicted direction from DoA
         for x in algo_names:
             doa_gt = pra.doa.algorithms[x](position_circle_xy, fs=fs, nfft=n_fft)
             spectrograms_gt = librosa.stft(np.asarray(output_wav[key]["gt_wav"]),n_fft=n_fft, hop_length=n_fft//4)
@@ -72,16 +72,16 @@ if __name__ == "__main__":
                 net_degree = np.argmax(doa_net.grid.values)
                 net_values = doa_net.grid.values
             
-            # 予測方向と正解方向との角度(degree)差判定
+            # Calculate the angle (degree) difference between the predicted and correct directions
             degree_diff_gt[x].append(np.abs(gt_degree - degree_coords))
             degree_diff_net[x].append(np.abs(net_degree - degree_coords))
             degree_diff_gt_net[x].append(np.abs(net_degree - gt_degree))
             
-            # DoAの結果保存
+            # Save the DoA results
             doa_values[x]["gt"][key] = gt_values
             doa_values[x]["net"][key] = net_values
     
-    # ラジアン差の平均
+    # Calculate the average of the radian differences
     degree_diff_gt_mean = dict()
     degree_diff_net_mean = dict()
     degree_diff_gt_net_mean = dict()

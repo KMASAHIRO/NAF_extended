@@ -22,20 +22,21 @@ if __name__ == "__main__":
     minmax_path = "./wav_data/minmax.pkl"
     results_dir = "./wav_data/results/"
 
-    # 残響時間と部屋の寸法
+    # Reverberation time and room dimensions
     rt60 = 0.5  # seconds
-    room_dim = [7.0, 6.4, 2.7]  # meters ここを二次元にすると二次平面の部屋になります
+    # If you make this two-dimensional, it will represent a two-dimensional room
+    room_dim = [7.0, 6.4, 2.7]  # meters
     sampling_rate = 48000
 
     all_compute_time = 0
     all_write_time = 0
     source_num = position_num_x*position_num_y
     for source_index in range(source_num):
-        # Sabineの残響式から壁面の平均吸音率と鏡像法での反射回数の上限を決めます
+        # Calculate the average absorption coefficient of the wall surface and the upper limit of the number of reflections using the image method from Sabine's reverberation formula
         e_absorption, max_order = pra.inverse_sabine(rt60, room_dim)
 
-        # 部屋をつくります
-        # fsは生成されるインパルス応答のサンプリング周波数です。入力する音源があるならそれに合わせる。
+        # Create the room
+        # fs is the sampling frequency of the generated impulse response.
         room = pra.ShoeBox(
             room_dim, fs=sampling_rate, materials=pra.Material(e_absorption), max_order=max_order
         )
@@ -92,13 +93,13 @@ if __name__ == "__main__":
                 dir_obj_pattern.append(dir_obj)
             dir_obj_list = np.repeat(dir_obj_pattern, mic_positions.shape[-1]//mic_num, axis=0).tolist()
 
-            # room にマイクを追加します
+            # Add a microphone to the room
             room.add_microphone_array(mic_positions, directivity=dir_obj_list)
         else:
-            # room にマイクを追加します
+            # Add a microphone to the room
             room.add_microphone_array(mic_positions)
             
-        # 音源ごとに座標情報を与え、`room`に追加していきます。
+        # Assign coordinate information for each sound source and add them to `room`
         room.add_source(source_position)
 
         before_compute = time()

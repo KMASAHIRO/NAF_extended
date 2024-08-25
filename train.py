@@ -223,7 +223,7 @@ def train_net(rank, world_size, freeport, other_args):
                     output_val_list.append(output_val_split)
                 
                 output_val = torch.cat(output_val_list, dim=2)
-                # スペクトログラム復元
+                # Reconstruct spectrogram
                 myout = output_val.cpu().numpy()
                 myout_mag = myout[...,0].reshape(1, other_args.dir_ch, dataset.sound_size[1], dataset.sound_size[2])
                 myout_phase = myout[...,1].reshape(1, other_args.dir_ch, dataset.sound_size[1], dataset.sound_size[2])
@@ -241,15 +241,15 @@ def train_net(rank, world_size, freeport, other_args):
 
                 # DoA
                 position_circle_xy = pra.beamforming.circular_2D_array(center=[0,0], M=other_args.dir_ch, phi0=math.pi/2, radius=0.0365)
-                # 正解データのDoA
+                # DoA of the correct data
                 doa_gt = pra.doa.algorithms["NormMUSIC"](position_circle_xy, fs=16000, nfft=512)
                 doa_gt.locate_sources(gt_spec)
                 gt_degree = np.argmax(doa_gt.grid.values)
-                # 検証データのDoA
+                # DoA of the validation data
                 doa_net = pra.doa.algorithms["NormMUSIC"](position_circle_xy, fs=16000, nfft=512)
                 doa_net.locate_sources(net_spec)
                 net_degree = np.argmax(doa_net.grid.values)
-                # 誤差計算
+                # Calculate error
                 DoA_err += np.min([np.abs(net_degree - gt_degree), 360.0 - np.abs(net_degree - gt_degree)])
                 DoA_cur_iter_val += 1
 
