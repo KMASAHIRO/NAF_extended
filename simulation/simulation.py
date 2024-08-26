@@ -99,7 +99,7 @@ if __name__ == "__main__":
             # Add a microphone to the room
             room.add_microphone_array(mic_positions)
             
-        # Assign coordinate information for each sound source and add them to 'room'
+        # Assign coordinate information for each sound source and add them to `room`
         room.add_source(source_position)
 
         before_compute = time()
