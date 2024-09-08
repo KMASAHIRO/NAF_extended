@@ -5,11 +5,17 @@ import math
 import pickle
 
 if __name__ == "__main__":
+    # The radius of the circular microphone array [m]
     mic_radius = 0.1
+    # The number of channels in the microphone array
     mic_num = 4
+    # Sampling rate
     fs = 22050
+    # The number of points in the FFT (Fourier Transform) used in each STFT window
     n_fft = 512
+    # The path to load the placement coordinates
     points_path = "./wav_data/points.txt"
+    # The path to record the DoA results
     write_path = "./DoA_train.pkl"
 
     with open("./results/inference_wav/" + "output_train_NAF.pkl", mode="rb") as f:
