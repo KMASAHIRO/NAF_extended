@@ -11,22 +11,32 @@ import os
 from time import time
 
 if __name__ == "__main__":
+    # The number of x-coordinates for placing the speakers and microphone arrays
     position_num_x = 13
+    # The number of y-coordinates for placing the speakers and microphone arrays
     position_num_y = 13
+    # The z-coordinate of the speakers and microphone arrays [m]
     position_z = 1.35
+    # The spacing between microphone arrays [m]
     blank_space = 0.5
+    # The radius of the circular microphone array [m]
     mic_radius = 0.1
+    # The number of channels in the microphone array
     mic_num = 4
+    # The microphone directivity flag (should be set to False)
     mic_directivity_flg = False
+    # The path to record the placement coordinates
     points_path = "./wav_data/points.txt"
+    # The path to record the maximum and minimum values of the placement coordinates
     minmax_path = "./minmax/minmax.pkl"
+    # The path to record the simulation RIR
     results_dir = "./wav_data/raw/"
 
     # Reverberation time and room dimensions
     rt60 = 0.5  # seconds
     # If you make this two-dimensional, it will represent a two-dimensional room
     room_dim = [7.0, 6.4, 2.7]  # meters
-    sampling_rate = 48000
+    sampling_rate = 48000 # Hz
 
     all_compute_time = 0
     all_write_time = 0
