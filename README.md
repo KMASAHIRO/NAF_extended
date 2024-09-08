@@ -36,7 +36,8 @@ We uploaded the real RIR data to [Google Drive](https://drive.google.com/drive/f
 ### Train
 - Training the network  
   <br>
-  For more details on options, refer to `./model_pipeline/options.py`.
+  For more details on options, refer to `./model_pipeline/options.py`.  
+  The trained model will be saved in the directory specified by `save_loc` and `exp_name` options.
   - ```
     python ./model_pipeline/train/train.py --exp_name sim_data_exp --epochs 300 --phase_alpha 3.0 --dir_ch 4
     ```
@@ -44,7 +45,7 @@ We uploaded the real RIR data to [Google Drive](https://drive.google.com/drive/f
 - Performing inference on the test data  
   <br>
   The options must be the same as those used in training.  
-  The inference output will be saved in the directory specified by the `--inference_loc` option.
+  The inference output will be saved in the directory specified by the `--save_loc` and `--inference_loc` options.
   - ```
     python ./model_pipeline/test/test.py --exp_name sim_data_exp --epochs 300 --phase_alpha 3.0 --dir_ch 4
     ```
@@ -55,19 +56,22 @@ We uploaded the real RIR data to [Google Drive](https://drive.google.com/drive/f
 ### Evaluation
 - Computing the spectral loss from the inference results on the test data  
   <br>
-  The options must be the same as those used in training.
+  The options must be the same as those used in training.  
+  The results will be printed to the standard output.
   - ```
     python ./model_pipeline/evaluation/compute_spectral_loss.py --exp_name sim_data_exp --epochs 300 --phase_alpha 3.0 --dir_ch 4
     ```
 - Computing the T60-error from the inference results on the test data  
   <br>
-  The options must be the same as those used in training.
+  The options must be the same as those used in training.  
+  The results will be printed to the standard output.
   - ```
     python ./model_pipeline/evaluation/compute_T60_err.py --exp_name sim_data_exp --epochs 300 --phase_alpha 3.0 --dir_ch 4
     ```
 - Computing the DoA error from the inference results on the test data  
   <br>
-  Do not specify the options.
+  Do not specify the options.  
+  The results will be printed to the standard output.
   - ```
     python ./model_pipeline/evaluation/compute_DoA_err.py
     ```
