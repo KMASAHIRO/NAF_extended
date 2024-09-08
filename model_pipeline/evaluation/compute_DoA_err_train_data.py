@@ -10,9 +10,9 @@ if __name__ == "__main__":
     fs = 22050
     n_fft = 512
     points_path = "./wav_data/points.txt"
-    write_path = "./DoA.pkl"
+    write_path = "./DoA_train.pkl"
 
-    with open("./results/inference_wav/" + "output_test_NAF.pkl", mode="rb") as f:
+    with open("./results/inference_wav/" + "output_train_NAF.pkl", mode="rb") as f:
         output_wav = pickle.load(f)
     
     with open(points_path, "r") as f:
