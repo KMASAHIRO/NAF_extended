@@ -27,7 +27,11 @@ Additionally, we made it possible to construct datasets through Pyroomacoustics 
   https://github.com/KMASAHIRO/MultiChannel_RIR_Generation/blob/31c707729db558375d6227934152a11a77a89a00/simulation/simulation.py#L14-L39
 
 ### Real data
-We uploaded the real RIR data to [Google Drive](https://drive.google.com/drive/folders/1o4kmmJmPN190h20iA4sGglMjoUfpL9k9?usp=sharing).
+- Downloading the real RIR dataset from [Google Drive](https://drive.google.com/file/d/1wyKT-XPhNN9LVQySLkPOt4hn_cID8Pd2/view?usp=sharing)
+  - ```
+    gdown https://drive.google.com/uc?id=1wyKT-XPhNN9LVQySLkPOt4hn_cID8Pd2  
+    unzip /content/real_wav_data.zip
+    ```
 
 ## Usage
 ### Preprocess
