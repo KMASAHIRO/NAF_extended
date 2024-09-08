@@ -80,9 +80,9 @@ class get_spec():
 # 1. Resample to 22050 Hz
 # 2. Make each log magnitude
 
-raw_path = "./wav_data/results"
-mag_path = "./data"
-phase_path = "./data"
+raw_path = "./wav_data/raw"
+mag_path = "./magnitudes"
+phase_path = "./phases"
 spec_getter = get_spec()
 
 length_tracker = []
@@ -138,8 +138,8 @@ f_phase.close()
 def pad(input_arr, max_len_in, constant=np.log(1e-3)):
     return np.pad(input_arr, [[0,0],[0,0],[0,max_len_in-input_arr.shape[2]]], constant_values=constant)
 
-raw_path = "./data"
-mean_std = "./data"
+raw_path = "./magnitudes"
+mean_std = "./magnitude_mean_std"
 
 files = os.listdir(raw_path)
 f_name = "magnitudes.h5"
@@ -170,8 +170,8 @@ with open(os.path.join(mean_std, "magnitude_mean_std.pkl"), "wb") as mean_std_fi
 def phase_pad(input_arr, max_len_in, constant=0.0):
     return np.pad(input_arr, [[0,0],[0,0],[0,max_len_in-input_arr.shape[2]]], constant_values=constant)
 
-raw_path = "./data"
-phase_std = "./data"
+raw_path = "./phases"
+phase_std = "./phase_std"
 
 files = os.listdir(raw_path)
 f_name = "phases.h5"

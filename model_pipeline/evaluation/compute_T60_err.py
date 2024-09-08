@@ -5,7 +5,7 @@ import os.path as path, sys
 current_dir = path.dirname(path.abspath(getsourcefile(lambda:0)))
 sys.path.insert(0, current_dir[:current_dir.rfind(path.sep)])
 
-from testing.test_utils import get_wave, compute_t60, load_audio, get_waves
+from model_pipeline.evaluation.utils import get_wave, compute_t60, load_audio, get_waves
 from options import Options
 import h5py
 import pickle
@@ -20,7 +20,7 @@ cur_args.exp_dir = exp_dir
 result_output_dir = os.path.join(cur_args.save_loc, cur_args.inference_loc)
 cur_args.result_output_dir = result_output_dir
 
-save_name = os.path.join(cur_args.result_output_dir, "output_train_NAF.pkl")# +"dual_grid1"
+save_name = os.path.join(cur_args.result_output_dir, "output_test_NAF.pkl")# +"dual_grid1"
 saver_obj = h5py.File(save_name, "r")
 
 std = saver_obj["std"][:]+0.0
@@ -72,7 +72,7 @@ mask = np.any(t60s_np<-0.5, axis=1)
 diff = np.mean(diff, axis=1)
 diff[mask] = 1
 
-with open("./results/inference_wav/" + "output_train_NAF.pkl", mode="wb") as f:
+with open("./results/inference_wav/" + "output_test_NAF.pkl", mode="wb") as f:
     pickle.dump(output_wav, f)
 print("{} total invalids out of {}".format(np.sum(mask), mask.shape[0]))
 print(np.mean(diff)*100)

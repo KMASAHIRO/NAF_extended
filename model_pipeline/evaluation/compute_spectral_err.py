@@ -9,7 +9,7 @@ import numpy as np
 current_dir = path.dirname(path.abspath(getsourcefile(lambda:0)))
 sys.path.insert(0, current_dir[:current_dir.rfind(path.sep)])
 
-from testing.test_utils import spectral
+from model_pipeline.evaluation.utils import spectral
 from options import Options
 import h5py
 

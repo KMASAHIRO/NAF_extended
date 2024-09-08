@@ -1,7 +1,7 @@
 import torch
 torch.backends.cudnn.benchmark = True
 
-from data_loading.sound_loader import soundsamples, soundsamples_val
+from model_pipeline.sound_loader import soundsamples
 import torch.multiprocessing as mp
 import os
 import socket

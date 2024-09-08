@@ -3,9 +3,9 @@ import random
 import pickle
 
 if __name__ == "__main__":
-    path = "./wav_data/results"
+    path = "./wav_data/raw"
 
-    write_path = "./"
+    write_path = "./train_test_split"
     train_test_split = list()
         
     files = os.listdir(path)

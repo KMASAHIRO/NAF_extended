@@ -5,7 +5,7 @@ import os.path as path, sys
 current_dir = path.dirname(path.abspath(getsourcefile(lambda:0)))
 sys.path.insert(0, current_dir[:current_dir.rfind(path.sep)])
 
-from data_loading.sound_loader import soundsamples
+from model_pipeline.sound_loader import soundsamples
 import pickle
 import os
 from model.networks import kernel_residual_fc_embeds

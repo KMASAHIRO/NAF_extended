@@ -19,8 +19,8 @@ if __name__ == "__main__":
     mic_num = 4
     mic_directivity_flg = False
     points_path = "./wav_data/points.txt"
-    minmax_path = "./wav_data/minmax.pkl"
-    results_dir = "./wav_data/results/"
+    minmax_path = "./minmax/minmax.pkl"
+    results_dir = "./wav_data/raw/"
 
     # Reverberation time and room dimensions
     rt60 = 0.5  # seconds
