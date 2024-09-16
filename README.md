@@ -11,7 +11,7 @@ Additionally, we made it possible to construct datasets through Pyroomacoustics 
 - Pyroomacoustics 0.7.3
 - h5py
 
-## Projet structure
+## Project structure
 - `model`: Extended NAF network
 - `model_pipeline`: Train, test, and evaluation of the network
 - `preprocess`: Preprocessing the RIR dataset for the network
