@@ -30,7 +30,7 @@ Additionally, we made it possible to construct datasets through Pyroomacoustics 
 - Downloading the real RIR dataset from [Google Drive](https://drive.google.com/file/d/1wyKT-XPhNN9LVQySLkPOt4hn_cID8Pd2/view?usp=sharing)
   - ```
     gdown https://drive.google.com/uc?id=1wyKT-XPhNN9LVQySLkPOt4hn_cID8Pd2  
-    unzip /content/real_wav_data.zip
+    unzip real_wav_data.zip
     ```
 
 ## Usage
@@ -87,3 +87,16 @@ Additionally, we made it possible to construct datasets through Pyroomacoustics 
     ```
   Directly modifying `./model_pipeline/evaluation/compute_DoA_err.py` to change the parameters
   https://github.com/KMASAHIRO/MultiChannel_RIR_Generation/blob/31c707729db558375d6227934152a11a77a89a00/model_pipeline/evaluation/compute_DoA_err.py#L8-L19
+
+## Citation
+```
+@article{加藤 雅大2024,
+  title={多チャンネル音響生成を評価するためのマイクロフォンアレイ室内インパルス応答データセットの構築},
+  author={加藤 雅大 and 小島 諒介},
+  journal={人工知能学会研究会資料 人工知能基本問題研究会},
+  volume={128},
+  pages={40-45},
+  year={2024},
+  doi={10.11517/jsaifpai.128.0_40}
+}
+```
