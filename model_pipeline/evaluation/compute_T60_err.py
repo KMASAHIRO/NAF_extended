@@ -72,6 +72,9 @@ mask = np.any(t60s_np<-0.5, axis=1)
 diff = np.mean(diff, axis=1)
 diff[mask] = 1
 
+if not os.path.exists("./results/inference_wav"):
+    os.mkdir("./results/inference_wav")
+
 with open("./results/inference_wav/" + "output_test_NAF.pkl", mode="wb") as f:
     pickle.dump(output_wav, f)
 print("{} total invalids out of {}".format(np.sum(mask), mask.shape[0]))
