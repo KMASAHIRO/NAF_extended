@@ -66,7 +66,7 @@ class get_spec():
             transformed_data = self.spec_transform(torch.from_numpy(wav_data)).numpy()
         else:
             
-            transformed_data = np.array([librosa.stft(wav_data,n_fft=self.n_fft, hop_length=self.hop),])[:,:-1]
+            transformed_data = np.array(librosa.stft(wav_data,n_fft=self.n_fft, hop_length=self.hop))[:,:-1]
 #         print(np.array([librosa.stft(wav_data[0],n_fft=self.n_fft, hop_length=self.hop),
 #                librosa.stft(wav_data[1],n_fft=self.n_fft, hop_length=self.hop)]).shape, "OLD SHAPE")
 
