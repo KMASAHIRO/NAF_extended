@@ -231,6 +231,12 @@ def train_net(rank, world_size, freeport, other_args):
                 mygt_mag = mygt[:,:other_args.dir_ch].reshape(1, other_args.dir_ch, dataset.sound_size[1], dataset.sound_size[2])
                 mygt_phase = mygt[:,other_args.dir_ch:].reshape(1, other_args.dir_ch, dataset.sound_size[1], dataset.sound_size[2])
 
+                # padding with zero
+                myout_mag = np.pad(myout_mag, ((0, 0), (0, 0), (0, 0), (0, dataset.mean.numpy().shape[-1] - dataset.sound_size[2])))
+                myout_phase = np.pad(myout_phase, ((0, 0), (0, 0), (0, 0), (0, dataset.mean.numpy().shape[-1] - dataset.sound_size[2])))
+                mygt_mag = np.pad(mygt_mag, ((0, 0), (0, 0), (0, 0), (0, dataset.mean.numpy().shape[-1] - dataset.sound_size[2])))
+                mygt_phase = np.pad(mygt_phase, ((0, 0), (0, 0), (0, 0), (0, dataset.mean.numpy().shape[-1] - dataset.sound_size[2])))
+
                 net_mag = (myout_mag * dataset.std.numpy() + dataset.mean.numpy())[0]
                 gt_mag = (mygt_mag * dataset.std.numpy() + dataset.mean.numpy())[0]
                 net_phase = myout_phase[0]*dataset.phase_std
