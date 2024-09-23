@@ -124,16 +124,24 @@ for key in files_channel:
         print(zz)
     
     loaded_wav = list()
+    channel_max_len = 0
     for ff in files_channel[key]:
         cur_file = os.path.join(raw_path, ff)
         try:
-            loaded_wav_tmp = load_audio(cur_file, use_torch=True)
+            loaded_wav_tmp = load_audio(cur_file, use_torch=True, resample_rate=16000)
+            if loaded_wav_tmp.shape[-1] > channel_max_len:
+                channel_max_len = loaded_wav_tmp.shape[-1]
             loaded_wav.append(loaded_wav_tmp)
         except Exception as e:
             print("0 length wav", cur_file, e)
             continue
-    loaded_wav = torch.cat(loaded_wav, dim=0)
-    real_spec, img_spec, raw_phase = spec_getter.transform(loaded_wav)
+    
+    # 結合するためにパディング
+    padded_wav = list()
+    for wav in loaded_wav:
+        padded_wav.append(librosa.util.fix_length(wav, size=channel_max_len))
+    padded_wav = np.concatenate(padded_wav, axis=0)
+    real_spec, img_spec, raw_phase = spec_getter.transform(padded_wav)
     length_tracker.append(real_spec.shape[2])
     f_mag.create_dataset('{}'.format(key), data=real_spec.astype(np.half))
     f_phase.create_dataset('{}'.format(key), data=img_spec.astype(np.half))
