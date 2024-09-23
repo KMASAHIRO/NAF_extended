@@ -38,6 +38,15 @@ if __name__ == "__main__":
     room_dim = [7.0, 6.4, 2.7]  # meters
     sampling_rate = 48000 # Hz
 
+    # Create the directory if the path doesn't exist
+    path_list = [points_path, minmax_path, results_dir]
+    for path in path_list:
+        # If the path is a file, extract the directory part
+        directory = os.path.dirname(path) if os.path.splitext(path)[1] else path
+        # Create the directory if it doesn't exist
+        if directory and not os.path.exists(directory):
+            os.makedirs(directory)
+    
     all_compute_time = 0
     all_write_time = 0
     source_num = position_num_x*position_num_y

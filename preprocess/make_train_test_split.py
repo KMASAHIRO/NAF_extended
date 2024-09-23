@@ -7,6 +7,10 @@ if __name__ == "__main__":
 
     write_path = "./train_test_split"
     train_test_split = list()
+
+    # Create the directory if it doesn't exist
+    if write_path and not os.path.exists(write_path):
+        os.makedirs(write_path)
         
     files = os.listdir(path)
     filenames = [f.split(".")[0] for f in files if "wav" in f]

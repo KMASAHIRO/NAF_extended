@@ -85,6 +85,15 @@ mag_path = "./magnitudes"
 phase_path = "./phases"
 spec_getter = get_spec()
 
+# Create the directory if the path doesn't exist
+path_list = [mag_path, phase_path]
+for path in path_list:
+    # If the path is a file, extract the directory part
+    directory = os.path.dirname(path) if os.path.splitext(path)[1] else path
+    # Create the directory if it doesn't exist
+    if directory and not os.path.exists(directory):
+        os.makedirs(directory)
+
 length_tracker = []
 mag_object = os.path.join(mag_path, "magnitudes")
 phase_object = os.path.join(phase_path, "phases")
@@ -141,6 +150,15 @@ def pad(input_arr, max_len_in, constant=np.log(1e-3)):
 raw_path = "./magnitudes"
 mean_std = "./magnitude_mean_std"
 
+# Create the directory if the path doesn't exist
+path_list = [mean_std]
+for path in path_list:
+    # If the path is a file, extract the directory part
+    directory = os.path.dirname(path) if os.path.splitext(path)[1] else path
+    # Create the directory if it doesn't exist
+    if directory and not os.path.exists(directory):
+        os.makedirs(directory)
+
 files = os.listdir(raw_path)
 f_name = "magnitudes.h5"
 print("Processing ", f_name)
@@ -172,6 +190,15 @@ def phase_pad(input_arr, max_len_in, constant=0.0):
 
 raw_path = "./phases"
 phase_std = "./phase_std"
+
+# Create the directory if the path doesn't exist
+path_list = [phase_std]
+for path in path_list:
+    # If the path is a file, extract the directory part
+    directory = os.path.dirname(path) if os.path.splitext(path)[1] else path
+    # Create the directory if it doesn't exist
+    if directory and not os.path.exists(directory):
+        os.makedirs(directory)
 
 files = os.listdir(raw_path)
 f_name = "phases.h5"
