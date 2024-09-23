@@ -59,7 +59,7 @@ class get_spec():
             self.spec_transform = None
         
     def transform(self, wav_data_prepad):
-        wav_data = librosa.util.fix_length(wav_data_prepad, wav_data_prepad.shape[-1]+self.n_fft//2)
+        wav_data = librosa.util.fix_length(wav_data_prepad, size=wav_data_prepad.shape[-1]+self.n_fft//2)
         if wav_data.shape[1]<4410:
             wav_data = librosa.util.fix_length(wav_data, 4410)
         if self.use_torch:
