@@ -4,7 +4,10 @@ Source code for "Development of a Microphone Array Room Impulse Response Dataset
 This source code is based on [Learning Neural Acoustic Fields](https://github.com/aluo-x/Learning_Neural_Acoustic_Fields).
   
 Neural acoustic fields learn from a Room Impulse Response (RIR) dataset and can estimate RIR at arbitrary positions. We extended Neural Acoustic Fields to be able to learn from multichannel RIRs.  
-Additionally, we made it possible to construct datasets through Pyroomacoustics simulations and evaluate multichannel RIR estimation based on the accuracy of Direction of Arrival (DoA), i.e., sound source direction estimation.
+Additionally, we made it possible to construct datasets through Pyroomacoustics simulations and evaluate multichannel RIR estimation based on the accuracy of Direction of Arrival (DoA), i.e., sound source direction estimation.  
+
+The source code in this repository has been verified to work on Google Colaboratory.  
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1AqfPFNwMW76aKWdViSF81UuOZ5l3q1Un?usp=sharing)
 
 ## Requirements (in addition to the usual python stack)
 - Pytorch 1.9 (1.10 should work as well)
