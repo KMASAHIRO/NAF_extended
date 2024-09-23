@@ -13,7 +13,7 @@ from torch.nn.parallel import DistributedDataParallel as DDP
 import numpy as np
 import math
 from time import time
-from options import Options
+from model_pipeline.options import Options
 import functools
 import random
 import pyroomacoustics as pra
