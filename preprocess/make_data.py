@@ -173,7 +173,7 @@ print("Processing ", f_name)
 f = h5py.File(os.path.join(raw_path, f_name), 'r')
 keys = list(f.keys())
 all_arrs = []
-for idx in np.random.choice(len(keys), 4000, replace=False):  
+for idx in np.random.choice(len(keys), size=len(keys)):  
     all_arrs.append(pad(f[keys[idx]], max_len).astype(np.single))
 all_arrs_2 = np.array(all_arrs, copy=False, dtype=np.single)
 print("Computing mean")
@@ -214,7 +214,7 @@ print("Processing ", f_name)
 f = h5py.File(os.path.join(raw_path, f_name), 'r')
 keys = list(f.keys())
 all_arrs = []
-for idx in np.random.choice(len(keys), 4000, replace=False):  
+for idx in np.random.choice(len(keys), size=len(keys)):  
     all_arrs.append(phase_pad(f[keys[idx]], max_len).astype(np.single))
 all_arrs_2 = np.array(all_arrs, copy=False, dtype=np.single)
 print("Computing std")
