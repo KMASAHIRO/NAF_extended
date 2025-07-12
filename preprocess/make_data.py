@@ -33,7 +33,7 @@ def load_audio(path_name, use_torch=True, resample=True, resample_rate=22050):
             print("len 0")
             assert False
         if wave_data_loaded.shape[1]<int(sr_loaded*0.1):
-            padded_wav = librosa.util.fix_length(wave_data_loaded, int(sr_loaded*0.1))
+            padded_wav = librosa.util.fix_length(wave_data_loaded, size=int(sr_loaded*0.1))
             resampled_wave = librosa.resample(padded_wav, orig_sr=sr_loaded, target_sr=resample_rate)
         else:
             resampled_wave = librosa.resample(wave_data_loaded, orig_sr=sr_loaded, target_sr=resample_rate)
@@ -61,7 +61,7 @@ class get_spec():
     def transform(self, wav_data_prepad):
         wav_data = librosa.util.fix_length(wav_data_prepad, size=wav_data_prepad.shape[-1]+self.n_fft//2)
         if wav_data.shape[1]<4410:
-            wav_data = librosa.util.fix_length(wav_data, 4410)
+            wav_data = librosa.util.fix_length(wav_data, size=4410)
         if self.use_torch:
             transformed_data = self.spec_transform(torch.from_numpy(wav_data)).numpy()
         else:
@@ -80,9 +80,11 @@ class get_spec():
 # 1. Resample to 22050 Hz
 # 2. Make each log magnitude
 
-raw_path = "./wav_data/raw"
-mag_path = "./magnitudes"
-phase_path = "./phases"
+base_dir = "/home/ach17616qc/AcoustiX/custom_scene/real_env_Smooth_concrete_painted/real_env_Smooth_concrete_painted_16kHz_standard_NAF"
+raw_path = os.path.join(base_dir, "raw")
+preprocess_base_dir = os.path.join(base_dir, "preprocess")
+mag_path = os.path.join(preprocess_base_dir, "magnitudes")
+phase_path = os.path.join(preprocess_base_dir, "phases")
 spec_getter = get_spec()
 
 # Create the directory if the path doesn't exist
@@ -155,8 +157,8 @@ f_phase.close()
 def pad(input_arr, max_len_in, constant=np.log(1e-3)):
     return np.pad(input_arr, [[0,0],[0,0],[0,max_len_in-input_arr.shape[2]]], constant_values=constant)
 
-raw_path = "./magnitudes"
-mean_std = "./magnitude_mean_std"
+raw_path = os.path.join(preprocess_base_dir, "magnitudes")
+mean_std = os.path.join(preprocess_base_dir, "magnitude_mean_std")
 
 # Create the directory if the path doesn't exist
 path_list = [mean_std]
@@ -175,7 +177,7 @@ keys = list(f.keys())
 all_arrs = []
 for idx in np.random.choice(len(keys), size=len(keys), replace=False):  
     all_arrs.append(pad(f[keys[idx]], max_len).astype(np.single))
-all_arrs_2 = np.array(all_arrs, copy=False, dtype=np.single)
+all_arrs_2 = np.array(all_arrs, dtype=np.single)
 print("Computing mean")
 mean_val = np.mean(all_arrs, axis=(0,1))
 print("Computing std")
@@ -196,8 +198,8 @@ with open(os.path.join(mean_std, "magnitude_mean_std.pkl"), "wb") as mean_std_fi
 def phase_pad(input_arr, max_len_in, constant=0.0):
     return np.pad(input_arr, [[0,0],[0,0],[0,max_len_in-input_arr.shape[2]]], constant_values=constant)
 
-raw_path = "./phases"
-phase_std = "./phase_std"
+raw_path = os.path.join(preprocess_base_dir, "phases")
+phase_std = os.path.join(preprocess_base_dir, "phase_std")
 
 # Create the directory if the path doesn't exist
 path_list = [phase_std]
@@ -216,7 +218,7 @@ keys = list(f.keys())
 all_arrs = []
 for idx in np.random.choice(len(keys), size=len(keys), replace=False):  
     all_arrs.append(phase_pad(f[keys[idx]], max_len).astype(np.single))
-all_arrs_2 = np.array(all_arrs, copy=False, dtype=np.single)
+all_arrs_2 = np.array(all_arrs, dtype=np.single)
 print("Computing std")
 std_val = np.std(all_arrs)
 
