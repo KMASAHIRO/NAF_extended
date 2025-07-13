@@ -32,11 +32,12 @@ def load_audio(path_name, use_torch=True, resample=True, resample_rate=22050):
         if wave_data_loaded.shape[1]==0:
             print("len 0")
             assert False
-        if wave_data_loaded.shape[1]<int(sr_loaded*0.1):
-            padded_wav = librosa.util.fix_length(wave_data_loaded, size=int(sr_loaded*0.1))
-            resampled_wave = librosa.resample(padded_wav, orig_sr=sr_loaded, target_sr=resample_rate)
-        else:
-            resampled_wave = librosa.resample(wave_data_loaded, orig_sr=sr_loaded, target_sr=resample_rate)
+        #if wave_data_loaded.shape[1]<int(sr_loaded*0.1):
+        #    padded_wav = librosa.util.fix_length(wave_data_loaded, size=int(sr_loaded*0.1))
+        #    resampled_wave = librosa.resample(padded_wav, orig_sr=sr_loaded, target_sr=resample_rate)
+        #else:
+        #    resampled_wave = librosa.resample(wave_data_loaded, orig_sr=sr_loaded, target_sr=resample_rate)
+        resampled_wave = librosa.resample(wave_data_loaded, orig_sr=sr_loaded, target_sr=resample_rate)
     else:
         resampled_wave = wave_data_loaded
     return np.clip(resampled_wave, -1.0, 1.0)
@@ -60,8 +61,8 @@ class get_spec():
         
     def transform(self, wav_data_prepad):
         wav_data = librosa.util.fix_length(wav_data_prepad, size=wav_data_prepad.shape[-1]+self.n_fft//2)
-        if wav_data.shape[1]<4410:
-            wav_data = librosa.util.fix_length(wav_data, size=4410)
+        #if wav_data.shape[1]<4410:
+        #    wav_data = librosa.util.fix_length(wav_data, size=4410)
         if self.use_torch:
             transformed_data = self.spec_transform(torch.from_numpy(wav_data)).numpy()
         else:
