@@ -369,7 +369,7 @@ def train_net(rank, world_size, freeport, other_args):
                 best_doa_chkpt_list[replace_index] = save_name
             else:
                 if best_doa_chkpt_list[-1] != "":
-                    os.remove(os.path.join(other_args.exp_dir, best_doa_chkpt_list[-1]))
+                    os.remove(os.path.join(other_args.exp_dir, "chkpts", best_doa_chkpt_list[-1]))
                 
                 for i in range(replace_index, len(best_doa_values) - 1):
                     if best_doa_chkpt_list[i] == "":
