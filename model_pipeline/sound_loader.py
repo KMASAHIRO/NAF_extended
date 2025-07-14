@@ -54,8 +54,9 @@ class soundsamples(torch.utils.data.Dataset):
         # use train test split
 
         self.sound_files = train_test_split[0]
-        self.sound_files_test = train_test_split[1]
-        self.sound_files_val = train_test_split[2]
+        #self.sound_files_test = train_test_split[1]
+        #self.sound_files_val = train_test_split[2]
+        self.sound_files_val = train_test_split[1]
 
         with open(os.path.join(mean_std_base, "magnitude_mean_std.pkl"), "rb") as mean_std_ff:
             mean_std = pickle.load(mean_std_ff)
@@ -169,52 +170,52 @@ class soundsamples(torch.utils.data.Dataset):
 
         return total_position, total_non_norm_position, 2.0*torch.from_numpy(selected_freq).float()/255.0 - 1.0, 2.0*torch.from_numpy(selected_time).float()/float(self.max_len-1)-1.0
 
-    def get_item_test(self, idx):
-        selected_files = self.sound_files_test
-        if self.sound_data is None:
-            self.sound_data = h5py.File(self.full_path, 'r')
-
-        if self.phase_data is None:
-            print(self.phase_path)
-            self.phase_data = h5py.File(self.phase_path, 'r')
-
-        pos_id = selected_files[idx]
-        query_str = pos_id
-        spec_data = torch.from_numpy(self.sound_data[query_str][:]).float()
-        phase_data = torch.from_numpy(self.phase_data[query_str][:]).float()
-
-        position = (pos_id.split(".")[0]).split("_")
-
-        spec_data = spec_data[:, :, :self.max_len]
-        actual_spec_len = spec_data.shape[2]
-
-        spec_data = (spec_data - self.mean[:,:,:actual_spec_len])/self.std[:,:,:actual_spec_len]
-        phase_data = phase_data / self.phase_std
-        # 2, freq, time
-        sound_size = spec_data.shape
-        self.sound_size = sound_size
-        self.sound_name = position
-        selected_time = np.arange(0, sound_size[2])
-        selected_freq = np.arange(0, sound_size[1])
-        selected_time, selected_freq = np.meshgrid(selected_time, selected_freq)
-        selected_time = selected_time.reshape(-1)
-        selected_freq = selected_freq.reshape(-1)
-
-        non_norm_start = np.array(self.positions[position[0]])[:2]
-        non_norm_end = np.array(self.positions[position[1]])[:2]
-        start_position = (torch.from_numpy((non_norm_start - self.min_pos) / (self.max_pos - self.min_pos))[None] - 0.5) * 2.0
-        start_position = torch.clamp(start_position, min=-1.0, max=1.0)
-        end_position = (torch.from_numpy((non_norm_end - self.min_pos) / (self.max_pos - self.min_pos))[None] - 0.5) * 2.0
-        end_position = torch.clamp(end_position, min=-1.0, max=1.0)
-        total_position = torch.cat((start_position, end_position), dim=1).float()
-        total_non_norm_position = torch.cat((torch.from_numpy(non_norm_start)[None], torch.from_numpy(non_norm_end)[None]), dim=1).float()
-
-        # selected_total = spec_data[:, selected_freq, selected_time]
-        selected_mag = spec_data[:, selected_freq, selected_time]
-        # print(phase_data.shape)
-        selected_phase = phase_data[:, selected_freq, selected_time]
-        selected_total = torch.cat((selected_mag, selected_phase), dim=0)
-        return selected_total, total_position, total_non_norm_position, 2.0*torch.from_numpy(selected_freq).float()/255.0 - 1.0, 2.0*torch.from_numpy(selected_time).float()/float(self.max_len-1)-1.0
+    #def get_item_test(self, idx):
+    #    selected_files = self.sound_files_test
+    #    if self.sound_data is None:
+    #        self.sound_data = h5py.File(self.full_path, 'r')
+    #
+    #    if self.phase_data is None:
+    #        print(self.phase_path)
+    #        self.phase_data = h5py.File(self.phase_path, 'r')
+    #
+    #    pos_id = selected_files[idx]
+    #    query_str = pos_id
+    #    spec_data = torch.from_numpy(self.sound_data[query_str][:]).float()
+    #    phase_data = torch.from_numpy(self.phase_data[query_str][:]).float()
+    #
+    #    position = (pos_id.split(".")[0]).split("_")
+    #
+    #    spec_data = spec_data[:, :, :self.max_len]
+    #    actual_spec_len = spec_data.shape[2]
+    #
+    #    spec_data = (spec_data - self.mean[:,:,:actual_spec_len])/self.std[:,:,:actual_spec_len]
+    #    phase_data = phase_data / self.phase_std
+    #    # 2, freq, time
+    #    sound_size = spec_data.shape
+    #    self.sound_size = sound_size
+    #    self.sound_name = position
+    #    selected_time = np.arange(0, sound_size[2])
+    #    selected_freq = np.arange(0, sound_size[1])
+    #    selected_time, selected_freq = np.meshgrid(selected_time, selected_freq)
+    #    selected_time = selected_time.reshape(-1)
+    #    selected_freq = selected_freq.reshape(-1)
+    #
+    #    non_norm_start = np.array(self.positions[position[0]])[:2]
+    #    non_norm_end = np.array(self.positions[position[1]])[:2]
+    #    start_position = (torch.from_numpy((non_norm_start - self.min_pos) / (self.max_pos - self.min_pos))[None] - 0.5) * 2.0
+    #    start_position = torch.clamp(start_position, min=-1.0, max=1.0)
+    #    end_position = (torch.from_numpy((non_norm_end - self.min_pos) / (self.max_pos - self.min_pos))[None] - 0.5) * 2.0
+    #    end_position = torch.clamp(end_position, min=-1.0, max=1.0)
+    #    total_position = torch.cat((start_position, end_position), dim=1).float()
+    #    total_non_norm_position = torch.cat((torch.from_numpy(non_norm_start)[None], torch.from_numpy(non_norm_end)[None]), dim=1).float()
+    #
+    #    # selected_total = spec_data[:, selected_freq, selected_time]
+    #    selected_mag = spec_data[:, selected_freq, selected_time]
+    #    # print(phase_data.shape)
+    #    selected_phase = phase_data[:, selected_freq, selected_time]
+    #    selected_total = torch.cat((selected_mag, selected_phase), dim=0)
+    #    return selected_total, total_position, total_non_norm_position, 2.0*torch.from_numpy(selected_freq).float()/255.0 - 1.0, 2.0*torch.from_numpy(selected_time).float()/float(self.max_len-1)-1.0
     
     def get_item_test_train_data(self, idx):
         selected_files = self.sound_files

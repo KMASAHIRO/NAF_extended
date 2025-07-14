@@ -114,6 +114,6 @@ def convert_centered_npz_to_wav_and_points(
 # === 実行例 ===
 if __name__ == "__main__":
     convert_centered_npz_to_wav_and_points(
-        npz_root="/home/ach17616qc/AcoustiX/custom_scene/real_env_Smooth_concrete_painted/real_env_Smooth_concrete_painted_centered_standard",  # npzとtrain_test_split.pklのあるディレクトリ
-        output_root="/home/ach17616qc/AcoustiX/custom_scene/real_env_Smooth_concrete_painted/real_env_Smooth_concrete_painted_centered_standard_NAF",              # wav出力先
+        npz_root="/home/ach17616qc/Pyroomacoustics/outputs/real_env_avr_16kHz_centered",  # npzとtrain_test_split.pklのあるディレクトリ
+        output_root="/home/ach17616qc/Pyroomacoustics/outputs/real_env_avr_16kHz_centered_NAF",              # wav出力先
     )

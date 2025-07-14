@@ -18,6 +18,8 @@ import functools
 import random
 import pyroomacoustics as pra
 import shutil
+import logging
+import pickle
 
 def get_spectrograms(input_stft, input_if):
     # 8 chanel input of shape [8,freq,time]
@@ -61,6 +63,12 @@ def train_net(rank, world_size, freeport, other_args):
 
     if rank == 0:
         print("Dataloader requires {} batches".format(len(sound_loader)))
+        
+        loss_logger = logging.getLogger("loss_logger")
+        loss_logger.setLevel(logging.INFO)
+        fh = logging.FileHandler(os.path.join(other_args.exp_dir, "loss.log"))
+        fh.setFormatter(logging.Formatter('%(asctime)s - %(message)s'))
+        loss_logger.addHandler(fh)
 
     start_epoch = 1
     load_opt = 0
@@ -176,6 +184,12 @@ def train_net(rank, world_size, freeport, other_args):
             else:
                 param_group['lr'] = new_lrate
             par_idx += 1
+
+        # ---------- 評価結果保存用 ----------
+        ori_sig_spec_list = []
+        pred_sig_spec_list = []
+        position_rx_list = []
+        position_tx_list = []
                 
         total_losses_val = 0
         total_mag_loss_val = 0
@@ -259,6 +273,17 @@ def train_net(rank, world_size, freeport, other_args):
                 DoA_err += np.min([np.abs(net_degree - gt_degree), 360.0 - np.abs(net_degree - gt_degree)])
                 DoA_cur_iter_val += 1
 
+                # --- non_norm_position_val からTx, Rx分離
+                non_norm = non_norm_position_val.squeeze(0).cpu().numpy()
+                position_tx = non_norm[0][None]  # start
+                position_rx = non_norm[1][None]  # end
+
+                # --- 蓄積（CPUに転送してnumpy化）
+                pred_sig_spec_list.append(pred_spec)
+                ori_sig_spec_list.append(ori_spec)
+                position_tx_list.append(position_tx)
+                position_rx_list.append(position_rx)
+
         if rank == 0:
             avg_loss = total_losses.item() / cur_iter
             avg_mag = total_mag_loss.item() / cur_iter
@@ -268,7 +293,36 @@ def train_net(rank, world_size, freeport, other_args):
             avg_phase_val = total_phase_loss_val.item() / cur_iter_val
             avg_DoA_err = DoA_err / DoA_cur_iter_val
             print("{}: Ending epoch {}, loss {:.5f}, mag {:.5f}, phase {:.5f}, loss_val {:.5f}, mag_val {:.5f}, phase_val {:.5f}, DoA_err(NormMUSIC) {:.5f}, time {}".format(other_args.exp_name, epoch, avg_loss, avg_mag, avg_phase, avg_loss_val, avg_mag_val, avg_phase_val, avg_DoA_err, time() - old_time))
+            logger.info("{}: Epoch {}, loss {:.5f}, mag {:.5f}, phase {:.5f}, loss_val {:.5f}, mag_val {:.5f}, phase_val {:.5f}, DoA_err(NormMUSIC) {:.5f}".format(
+                other_args.exp_name, epoch, avg_loss, avg_mag, avg_phase, avg_loss_val, avg_mag_val, avg_phase_val, avg_DoA_err))
+            loss_save_dir = os.path.join(other_args.exp_dir, "loss_values")
+            os.makedirs(loss_save_dir, exist_ok=True)
+            loss_data = {
+                "epoch": epoch,
+                "loss": avg_loss,
+                "mag": avg_mag,
+                "phase": avg_phase,
+                "loss_val": avg_loss_val,
+                "mag_val": avg_mag_val,
+                "phase_val": avg_phase_val,
+                "DoA_err": avg_DoA_err
+            }
+            with open(os.path.join(loss_save_dir, f"loss_epoch_{epoch:05d}.pkl"), "wb") as f:
+                pickle.dump(loss_data, f)
+            
             old_time = time()
+
+            save_dir = os.path.join(other_args.exp_dir, "val_results")
+            os.makedirs(save_dir, exist_ok=True)
+            save_path = os.path.join(save_dir, f"val_epoch_{epoch:05d}.npz")
+            np.savez_compressed(
+                save_path,
+                ori_sig_spec=np.concatenate(ori_sig_spec_list, axis=0),
+                pred_sig_spec=np.concatenate(pred_sig_spec_list, axis=0),
+                position_rx=np.concatenate(position_rx_list, axis=0),
+                position_tx=np.concatenate(position_tx_list, axis=0),
+            )
+            print(f"Validation results saved to: {save_path}")
         #if rank == 0 and (epoch%20==0 or epoch==1 or epoch>(other_args.epochs-3)):
         #
         #    save_name = str(epoch).zfill(5)+".chkpt"

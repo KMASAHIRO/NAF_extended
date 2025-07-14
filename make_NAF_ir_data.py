@@ -113,6 +113,6 @@ def convert_npz_to_wav_and_points(
 # === 実行例 ===
 if __name__ == "__main__":
     convert_npz_to_wav_and_points(
-        npz_root="/home/ach17616qc/AcoustiX/custom_scene/real_env_Smooth_concrete_painted/real_env_Smooth_concrete_painted_16kHz_standard",
-        output_root="/home/ach17616qc/AcoustiX/custom_scene/real_env_Smooth_concrete_painted/real_env_Smooth_concrete_painted_16kHz_standard_NAF"
+        npz_root="/home/ach17616qc/Pyroomacoustics/outputs/real_env_avr_16kHz",
+        output_root="/home/ach17616qc/Pyroomacoustics/outputs/real_env_avr_16kHz_NAF"
     )

@@ -1,0 +1,25 @@
+save_loc: "./results"
+exp_name: "{}"
+coor_base: "./wav_data"
+spec_base: "./magnitudes"
+phase_base: "./phases"
+mean_std_base: "./magnitude_mean_std"
+phase_std_base: "./phase_std"
+minmax_base: "./minmax"
+wav_base: "./wav_data/raw"
+split_loc: "./train_test_split/"
+
+gpus: 4
+dir_ch: 4
+max_len: 245
+layers: 8
+layers_residual: 0
+features: 512
+epochs: 200
+reg_eps: 0.1
+lr_init: 0.0005
+lr_decay: 0.1
+phase_alpha: 0.1
+mag_alpha: 1.0
+batch_norm: "none"
+activation_func_name: "default"

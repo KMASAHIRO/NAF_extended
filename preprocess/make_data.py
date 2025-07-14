@@ -81,7 +81,7 @@ class get_spec():
 # 1. Resample to 22050 Hz
 # 2. Make each log magnitude
 
-base_dir = "/home/ach17616qc/AcoustiX/custom_scene/real_env_Smooth_concrete_painted/real_env_Smooth_concrete_painted_16kHz_standard_NAF"
+base_dir = "/home/ach17616qc/Pyroomacoustics/outputs/real_env_avr_16kHz_centered_NAF"
 raw_path = os.path.join(base_dir, "raw")
 preprocess_base_dir = os.path.join(base_dir, "preprocess")
 mag_path = os.path.join(preprocess_base_dir, "magnitudes")
