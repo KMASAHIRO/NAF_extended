@@ -197,6 +197,8 @@ def train_net(rank, world_size, freeport, other_args):
         cur_iter_val = 0
         DoA_err = 0
         DoA_cur_iter_val = 0
+        net_spec_ch_list = []
+        gt_spec_ch_list = []
         ddp_auditory_net.eval()
         with torch.no_grad():
             for val_id in range(len(dataset.sound_files_val)):
@@ -259,19 +261,35 @@ def train_net(rank, world_size, freeport, other_args):
                 net_spec = get_spectrograms(net_mag, net_phase)
                 gt_spec = get_spectrograms(gt_mag, gt_phase)
 
-                # DoA
-                position_circle_xy = pra.beamforming.circular_2D_array(center=[0,0], M=other_args.dir_ch, phi0=math.pi/2, radius=0.0365)
-                # DoA of the correct data
-                doa_gt = pra.doa.algorithms["NormMUSIC"](position_circle_xy, fs=16000, nfft=512)
-                doa_gt.locate_sources(gt_spec)
-                gt_degree = np.argmax(doa_gt.grid.values)
-                # DoA of the validation data
-                doa_net = pra.doa.algorithms["NormMUSIC"](position_circle_xy, fs=16000, nfft=512)
-                doa_net.locate_sources(net_spec)
-                net_degree = np.argmax(doa_net.grid.values)
-                # Calculate error
-                DoA_err += np.min([np.abs(net_degree - gt_degree), 360.0 - np.abs(net_degree - gt_degree)])
-                DoA_cur_iter_val += 1
+                if other_args.dir_ch <= 1:
+                    net_spec_ch_list.append(net_spec)
+                    gt_spec_ch_list.append(gt_spec)
+
+                if other_args.dir_ch > 1 or len(net_spec_ch_list) == 8:
+                    if other_args.dir_ch > 1:
+                        doa_ch = other_args.dir_ch
+                        net_spec_doa = net_spec
+                        gt_spec_doa = gt_spec
+                    else:
+                        doa_ch = len(net_spec_ch_list)
+                        net_spec_doa = np.concatenate(net_spec_ch_list, axis=0)
+                        gt_spec_doa = np.concatenate(gt_spec_ch_list, axis=0)
+                        net_spec_ch_list = []
+                        gt_spec_ch_list = []
+
+                    # DoA
+                    position_circle_xy = pra.beamforming.circular_2D_array(center=[0,0], M=doa_ch, phi0=math.pi/2, radius=0.0365)
+                    # DoA of the correct data
+                    doa_gt = pra.doa.algorithms["NormMUSIC"](position_circle_xy, fs=16000, nfft=512)
+                    doa_gt.locate_sources(gt_spec_doa)
+                    gt_degree = np.argmax(doa_gt.grid.values)
+                    # DoA of the validation data
+                    doa_net = pra.doa.algorithms["NormMUSIC"](position_circle_xy, fs=16000, nfft=512)
+                    doa_net.locate_sources(net_spec_doa)
+                    net_degree = np.argmax(doa_net.grid.values)
+                    # Calculate error
+                    DoA_err += np.min([np.abs(net_degree - gt_degree), 360.0 - np.abs(net_degree - gt_degree)])
+                    DoA_cur_iter_val += 1
 
                 # --- non_norm_position_val からTx, Rx分離
                 non_norm = non_norm_position_val.squeeze().cpu().numpy()
@@ -333,7 +351,10 @@ def train_net(rank, world_size, freeport, other_args):
             save_name = str(epoch).zfill(5)+".chkpt"
             save_dict = {}
             save_dict["network"] = ddp_auditory_net.module.state_dict()
-            torch.save(save_dict, os.path.join(other_args.exp_dir, save_name))
+            chkpt_dir = os.path.join(other_args.exp_dir, "chkpts")
+            os.makedirs(chkpt_dir, exist_ok=True)
+            save_path = os.path.join(chkpt_dir, save_name)
+            torch.save(save_dict, save_path)
         
         if rank == 0 and (avg_DoA_err <= best_doa_values[-1] and avg_DoA_err < 65.0):
             replace_index = len(best_doa_values) - 1
@@ -359,13 +380,16 @@ def train_net(rank, world_size, freeport, other_args):
                     old_save_name_split[2] = str(int(old_save_name_split[2]) + 1).zfill(2)
                     new_save_name = "_".join(old_save_name_split)
                     best_doa_chkpt_list[i] = new_save_name
-                    shutil.move(os.path.join(other_args.exp_dir, old_save_name), os.path.join(other_args.exp_dir, new_save_name))
+                    shutil.move(os.path.join(other_args.exp_dir, "chkpts", old_save_name), os.path.join(other_args.exp_dir, "chkpts", new_save_name))
                 save_name = "best_doa_" + str(replace_index+1).zfill(2) + "_epoch_" + str(epoch).zfill(5) + ".chkpt"
                 best_doa_chkpt_list = best_doa_chkpt_list[:replace_index] + [save_name] + best_doa_chkpt_list[replace_index:-1]
 
             save_dict = {}
             save_dict["network"] = ddp_auditory_net.module.state_dict()
-            torch.save(save_dict, os.path.join(other_args.exp_dir, save_name))
+            chkpt_dir = os.path.join(other_args.exp_dir, "chkpts")
+            os.makedirs(chkpt_dir, exist_ok=True)
+            save_path = os.path.join(chkpt_dir, save_name)
+            torch.save(save_dict, save_path)
             
     print("Wrapping up training {}".format(other_args.exp_name))
     dist.barrier()
