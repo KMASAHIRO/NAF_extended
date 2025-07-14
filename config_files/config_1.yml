@@ -9,7 +9,7 @@ minmax_base: "Pyroomacoustics/outputs/real_exp_8720_NAF/minmax"
 wav_base: "Pyroomacoustics/outputs/real_exp_8720_NAF/raw"
 split_loc: "Pyroomacoustics/outputs/real_exp_8720_NAF/train_test_split"
 gpus: 1
-dir_ch: 8
+dir_ch: 1
 max_len: 15
 layers: 8
 layers_residual: 0

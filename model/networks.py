@@ -31,8 +31,9 @@ class kernel_residual_fc_embeds(nn.Module):
 
         self.dir_ch = dir_ch
 
-        for k in range(num_block - 1):
-            self.register_parameter("channel_{}".format(k),nn.Parameter(torch.randn(1, 1, self.dir_ch, intermediate_ch)/math.sqrt(intermediate_ch),requires_grad=True))
+        if self.dir_ch > 1:
+            for k in range(num_block - 1):
+                self.register_parameter("channel_{}".format(k),nn.Parameter(torch.randn(1, 1, self.dir_ch, intermediate_ch)/math.sqrt(intermediate_ch),requires_grad=True))
         
         self.proj = basic_project2(input_ch + int(2*grid_ch), intermediate_ch)
 
@@ -101,9 +102,17 @@ class kernel_residual_fc_embeds(nn.Module):
         total_grid = torch.cat((grid_feat_v0, grid_feat_v1), dim=-1).unsqueeze(1).expand(-1, SAMPLES, -1)
 
         my_input = torch.cat((total_grid, input_stuff), dim=-1)
-        out = self.proj(my_input).unsqueeze(2).repeat(1, 1, self.dir_ch, 1) + getattr(self, "channel_0")
+        if self.dir_ch > 1:
+            out = self.proj(my_input).unsqueeze(2).repeat(1, 1, self.dir_ch, 1) + getattr(self, "channel_0")
+        else:
+            out = self.proj(my_input).unsqueeze(2).repeat(1, 1, self.dir_ch, 1)
+        
         for k in range(len(self.layers)):
-            out = self.layers[k](out) + getattr(self, "channel_{}".format(k + 1))
+            if self.dir_ch > 1:
+                out = self.layers[k](out) + getattr(self, "channel_{}".format(k + 1))
+            else:
+                out = self.layers[k](out)
+
             if k == (self.blocks // 2 - 1):
                 out = out + self.residual_1(my_input).unsqueeze(2).repeat(1, 1, self.dir_ch, 1)
         if self.probe:

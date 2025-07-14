@@ -274,13 +274,13 @@ def train_net(rank, world_size, freeport, other_args):
                 DoA_cur_iter_val += 1
 
                 # --- non_norm_position_val からTx, Rx分離
-                non_norm = non_norm_position_val.squeeze(0).cpu().numpy()
-                position_tx = non_norm[0][None]  # start
-                position_rx = non_norm[1][None]  # end
+                non_norm = non_norm_position_val.squeeze().cpu().numpy()
+                position_tx = non_norm[:2][None]  # → shape: (1, 2)
+                position_rx = non_norm[2:][None]  # → shape: (1, 2)
 
                 # --- 蓄積（CPUに転送してnumpy化）
-                pred_sig_spec_list.append(pred_spec)
-                ori_sig_spec_list.append(ori_spec)
+                pred_sig_spec_list.append(net_spec)
+                ori_sig_spec_list.append(gt_spec)
                 position_tx_list.append(position_tx)
                 position_rx_list.append(position_rx)
 
@@ -293,7 +293,7 @@ def train_net(rank, world_size, freeport, other_args):
             avg_phase_val = total_phase_loss_val.item() / cur_iter_val
             avg_DoA_err = DoA_err / DoA_cur_iter_val
             print("{}: Ending epoch {}, loss {:.5f}, mag {:.5f}, phase {:.5f}, loss_val {:.5f}, mag_val {:.5f}, phase_val {:.5f}, DoA_err(NormMUSIC) {:.5f}, time {}".format(other_args.exp_name, epoch, avg_loss, avg_mag, avg_phase, avg_loss_val, avg_mag_val, avg_phase_val, avg_DoA_err, time() - old_time))
-            logger.info("{}: Epoch {}, loss {:.5f}, mag {:.5f}, phase {:.5f}, loss_val {:.5f}, mag_val {:.5f}, phase_val {:.5f}, DoA_err(NormMUSIC) {:.5f}".format(
+            loss_logger.info("{}: Epoch {}, loss {:.5f}, mag {:.5f}, phase {:.5f}, loss_val {:.5f}, mag_val {:.5f}, phase_val {:.5f}, DoA_err(NormMUSIC) {:.5f}".format(
                 other_args.exp_name, epoch, avg_loss, avg_mag, avg_phase, avg_loss_val, avg_mag_val, avg_phase_val, avg_DoA_err))
             loss_save_dir = os.path.join(other_args.exp_dir, "loss_values")
             os.makedirs(loss_save_dir, exist_ok=True)
