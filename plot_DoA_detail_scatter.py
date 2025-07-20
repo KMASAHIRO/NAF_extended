@@ -39,10 +39,10 @@ def plot_doa_comparison_nao(yaml_path: str):
         pred_deg_list, gt_deg_list, true_deg_list = [], [], []
 
         if doa_ch > 1:
-            G = pred_spec_all.shape[0]
+            G = pos_rx.shape[0]
             for i in range(G):
-                pred_group = pred_spec_all[i]  # (doa_ch, F, T)
-                ori_group = ori_spec_all[i]
+                pred_group = pred_spec_all[i * doa_ch: (i+1) * doa_ch]  # (doa_ch, F, T)
+                ori_group = ori_spec_all[i * doa_ch: (i+1) * doa_ch]
                 mic_center = pos_rx[i]         # already center position
                 tx = pos_tx[i]                 # (2,)
 
