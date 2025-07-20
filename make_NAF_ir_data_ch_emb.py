@@ -83,18 +83,18 @@ def convert_centered_npz_to_wav_and_points(
             split_data = pickle.load(f)
 
         def extract_pos_ids(relpaths):
-            pos_ids = set()
+            pos_ids = list()
             for p in relpaths:
                 parts = Path(p).parts  # tx_*/rx_*/ir_*.npz
                 try:
                     tx_idx = int(parts[0].split("_")[1])
                     rx_idx = int(parts[1].split("_")[1])
                     key = f"{tx_idx}_{rx_idx}"
-                    if key in tx_rx_to_pos_id:
-                        pos_ids.add(tx_rx_to_pos_id[key])
+                    if tx_rx_to_pos_id[key] not in pos_ids:
+                        pos_ids.append(tx_rx_to_pos_id[key])
                 except (IndexError, ValueError):
                     continue
-            return list(pos_ids)
+            return pos_ids
 
         train_ids = extract_pos_ids(split_data.get("train", []))
         test_ids = extract_pos_ids(split_data.get("test", []))

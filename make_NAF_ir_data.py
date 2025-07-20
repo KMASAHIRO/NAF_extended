@@ -28,7 +28,7 @@ def convert_npz_to_wav_and_points(
     point_id_counter = 0
     point_id_map = {}
     pos_id_set = set()
-    tx_rx_to_pos_id = dict()
+    tx_rx_ch_to_pos_id = dict()
 
     for tx_dir in sorted(npz_root.glob("tx_*"), key=lambda p: int(p.name.split("_")[1])):
         tx_idx = int(tx_dir.name.split("_")[1])
@@ -39,6 +39,7 @@ def convert_npz_to_wav_and_points(
                 continue
 
             for ir_file in ir_files:
+                ir_idx = int(ir_file.name.split("_")[1].split(".")[0])
                 data = np.load(ir_file)
                 ir = data["ir"][:ir_len]
                 ch_idx = 1  # 明示的な ch_idx がないため 1 に固定
@@ -59,7 +60,7 @@ def convert_npz_to_wav_and_points(
 
                 pos_id = f"{source_id}_{target_id}"
                 pos_id_set.add(pos_id)
-                tx_rx_to_pos_id[f"{tx_idx}_{rx_idx}"] = pos_id
+                tx_rx_ch_to_pos_id[f"{tx_idx}_{rx_idx}_{ir_idx}"] = pos_id
 
                 wav_path = raw_dir / f"{pos_id}_{ch_idx}.wav"
                 sf.write(wav_path, ir, sampling_rate)
@@ -82,18 +83,19 @@ def convert_npz_to_wav_and_points(
             split_data = pickle.load(f)
 
         def extract_pos_ids(relpaths):
-            pos_ids = set()
+            pos_ids = list()
             for p in relpaths:
                 parts = Path(p).parts  # tx_*/rx_*/ir_*.npz
                 try:
                     tx_idx = int(parts[0].split("_")[1])
                     rx_idx = int(parts[1].split("_")[1])
-                    key = f"{tx_idx}_{rx_idx}"
-                    if key in tx_rx_to_pos_id:
-                        pos_ids.add(tx_rx_to_pos_id[key])
+                    ir_idx = int(parts[2].split("_")[1].split(".")[0])
+                    key = f"{tx_idx}_{rx_idx}_{ir_idx}"
+                    if tx_rx_ch_to_pos_id[key] not in pos_ids:
+                        pos_ids.append(tx_rx_ch_to_pos_id[key])
                 except (IndexError, ValueError):
                     continue
-            return list(pos_ids)
+            return pos_ids
 
         train_ids = extract_pos_ids(split_data.get("train", []))
         test_ids = extract_pos_ids(split_data.get("test", []))
