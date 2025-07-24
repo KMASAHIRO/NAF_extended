@@ -14,11 +14,11 @@ max_len: 15
 layers: 8
 layers_residual: 0
 features: 512
-epochs: 300
+epochs: 500
 reg_eps: 0.1
 lr_init: 0.0005
 lr_decay: 0.1
-phase_alpha: 1.0
+phase_alpha: 3.0
 mag_alpha: 1.0
-batch_norm: "none"
+batch_norm: "main"
 activation_func_name: "default"
