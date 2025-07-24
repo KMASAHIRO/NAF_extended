@@ -39,8 +39,8 @@ def generate_param_variants_flat(base_config_dir: str, param_dict: dict):
             )
             new_config['exp_name'] = new_expname
 
-            # 出力パス例: NAF_logs/pra_ch_emb/config_pra_ch_emb_param_7.yml
-            output_file = base_path / f'config_{last_dir}_param_{new_idx}.yml'
+            # 出力パス例: NAF_logs/pra_ch_emb/config_pra_ch_emb_7.yml
+            output_file = base_path / f'config_{last_dir}_{new_idx}.yml'
             with open(output_file, 'w') as f:
                 yaml.dump(new_config, f, sort_keys=False)
 
