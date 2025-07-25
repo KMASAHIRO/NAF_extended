@@ -283,12 +283,17 @@ def train_net(rank, world_size, freeport, other_args):
                     doa_gt = pra.doa.algorithms["NormMUSIC"](position_circle_xy, fs=16000, nfft=512)
                     doa_gt.locate_sources(gt_spec_doa)
                     gt_degree = np.argmax(doa_gt.grid.values)
-                    # DoA of the validation data
-                    doa_net = pra.doa.algorithms["NormMUSIC"](position_circle_xy, fs=16000, nfft=512)
-                    doa_net.locate_sources(net_spec_doa)
-                    net_degree = np.argmax(doa_net.grid.values)
-                    # Calculate error
-                    DoA_err += np.min([np.abs(net_degree - gt_degree), 360.0 - np.abs(net_degree - gt_degree)])
+                    
+                    try:
+                        # DoA of the validation data
+                        doa_net = pra.doa.algorithms["NormMUSIC"](position_circle_xy, fs=16000, nfft=512)
+                        doa_net.locate_sources(net_spec_doa)
+                        net_degree = np.argmax(doa_net.grid.values)
+                        # Calculate error
+                        DoA_err += np.min([np.abs(net_degree - gt_degree), 360.0 - np.abs(net_degree - gt_degree)])
+                    except np.linalg.LinAlgError as e:
+                        DoA_err += 90
+                        print(f"DoA for pred signal was failede {e}")
                     DoA_cur_iter_val += 1
 
                 # --- non_norm_position_val からTx, Rx分離
