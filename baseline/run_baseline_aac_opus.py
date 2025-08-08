@@ -115,7 +115,7 @@ def run_interpolation(baseline_mode, interp_mode, args):
         train_data = []
 
         for train_str in train_split:
-            listener, emitter = train_str.split("_")
+            emitter, listener = train_str.split("_")
             total_pos = np.concatenate((coors[int(listener)], coors[int(emitter)]), axis=0)
             wav_path = os.path.join(train_folder, f"{train_str}_{ch}.wav")
             try:
@@ -151,10 +151,15 @@ def run_interpolation(baseline_mode, interp_mode, args):
     # テストデータ補間
     container = dict()
     gt_container = dict()
+    tx_pos_container = dict()
+    rx_pos_container = dict()
     print("Interpolating test data...")
     for test_str in test_split:
-        listener, emitter = test_str.split("_")
+        emitter, listener = test_str.split("_")
         total_pos = np.concatenate((coors[int(listener)], coors[int(emitter)]), axis=0)
+
+        rx_pos_container[test_str] = coors[int(listener)].astype(np.single)
+        tx_pos_container[test_str] = coors[int(emitter)].astype(np.single)
 
         ch_outputs = []
         gt_outputs = []
@@ -168,10 +173,7 @@ def run_interpolation(baseline_mode, interp_mode, args):
             # Pad GT to match predicted length
             gt_data = np.pad(gt_data, (0, max_lengths[ch] - len(gt_data)))
 
-            out = interpolators[ch](total_pos)
-            if out is None:
-                print(f"Interpolation failed at {test_str} ch {ch}")
-                out = np.zeros(max_lengths[ch], dtype=np.single)
+            out = interpolators[ch](total_pos)[0]
 
             ch_outputs.append(out.astype(np.single))
             gt_outputs.append(gt_data)
@@ -179,15 +181,17 @@ def run_interpolation(baseline_mode, interp_mode, args):
         container[test_str] = np.stack(ch_outputs, axis=0)  # shape: (channel_count, time)
         gt_container[test_str] = np.stack(gt_outputs, axis=0)
     
-    # pred + gt をまとめて保存
+    # pred + gt + 座標をまとめて保存
     output = {
         "pred": container,
-        "gt": gt_container
+        "gt": gt_container,
+        "tx_pos": tx_pos_container,
+        "rx_pos": rx_pos_container
     }
     
     # 保存
     with open(save_name, "wb") as f:
-        pickle.dump(container, f)
+        pickle.dump(output, f)
     print(f"Results saved: {save_name}")
 
 # ========== メイン ==========
