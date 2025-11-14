@@ -113,7 +113,8 @@ def plot_angles_grid(pkl_path: str, rows: int = 3, cols: int = 6,
     last_ax_idx = -1
 
     for i, e in enumerate(entries):
-        if i >= R*C: break
+        if i >= R*C:
+            break
         last_ax_idx = i
         ax = axes[i]
 
@@ -127,9 +128,11 @@ def plot_angles_grid(pkl_path: str, rows: int = 3, cols: int = 6,
             ax.set_title(_title_for_subplot(e.get("pred", {})) + "\n[pred/ori: no frames]", fontsize=9)
             if np.isfinite(true_deg):
                 ax.axhline(true_deg % 360.0, color="red", lw=1.0, alpha=0.9, linestyle='--')
-            ax.set_ylim(*ylim); ax.grid(True, alpha=0.3)
+            ax.set_ylim(*ylim)
+            ax.grid(True, alpha=0.3)
             ax.set_xlabel("Window center (STFT frame)")
-            if i % C == 0: ax.set_ylabel("Angle [deg]")
+            if i % C == 0:
+                ax.set_ylabel("Angle [deg]")
             continue
 
         if has_pred:
@@ -146,9 +149,11 @@ def plot_angles_grid(pkl_path: str, rows: int = 3, cols: int = 6,
             ax.axhline(true_deg % 360.0, color="red", lw=1.2, alpha=0.9)
 
         ax.set_title(_title_for_subplot(e.get("pred", {})), fontsize=9)
-        ax.set_ylim(*ylim); ax.grid(True, alpha=0.3)
+        ax.set_ylim(*ylim)
+        ax.grid(True, alpha=0.3)
         ax.set_xlabel("Window center (STFT frame)")
-        if i % C == 0: ax.set_ylabel("Angle [deg]")
+        if i % C == 0:
+            ax.set_ylabel("Angle [deg]")
 
         if i == 0:
             ax.legend(loc="lower right", fontsize=8, framealpha=0.8)
@@ -160,8 +165,12 @@ def plot_angles_grid(pkl_path: str, rows: int = 3, cols: int = 6,
     cond = meta.get("condition", "")
     stft = f"L{meta.get('stft_nfft','?')}_H{meta.get('stft_hop','?')}_{meta.get('stft_win','?')}"
     Tuse = meta.get("Tuse", None)
-    fig.suptitle(f"{cond} | STFT {stft}" + (f" | T_use={Tuse}" if Tuse is not None else "") +
-                 "  (angles: pred & ori)", fontsize=12, y=1.02)
+    fig.suptitle(
+        f"{cond} | STFT {stft}" +
+        (f" | T_use={Tuse}" if Tuse is not None else "") +
+        "  (angles: pred & ori)",
+        fontsize=12, y=1.02
+    )
 
     plt.tight_layout()
     out_png = os.path.join(os.path.dirname(pkl_path), "angles_pred_ori_grid.png")
@@ -198,7 +207,8 @@ def collect_scatter_points(entries: Sequence[dict]):
                 ys_ori_pred.append(np.array([pred_map[f] for f in common], dtype=float))
 
     def _cat(L):
-        if not L: return np.array([], dtype=float)
+        if not L:
+            return np.array([], dtype=float)
         return np.concatenate(L)
 
     return (_cat(xs_true_ori), _cat(ys_true_ori),
@@ -226,7 +236,8 @@ def collect_frame_errors(entries: Sequence[dict]):
                 e_pred_ori.append(np.abs(wrap_signed(pa - oa)))
 
     def _cat(L):
-        if not L: return np.array([], dtype=float)
+        if not L:
+            return np.array([], dtype=float)
         return np.concatenate(L)
 
     return _cat(e_ori_true), _cat(e_pred_true), _cat(e_pred_ori)
@@ -239,21 +250,26 @@ def plot_scatter_all(out_png: str,
         print(f"[SKIP] no scatter data -> {out_png}")
         return
 
-    fig, axes = plt.subplots(1, 3, figsize=(15, 5))
+    fig, axes = plt.subplots(1, 3, figsize=(21, 7))
     axes = axes.ravel()
 
     def sp(ax, x, y, xl, yl, ttl):
         if x.size == 0 or y.size == 0:
-            ax.text(0.5, 0.5, "no data", ha='center', va='center', fontsize=12, color='gray')
+            ax.text(0.5, 0.5, "no data", ha='center', va='center',
+                    fontsize=12, color='gray')
         else:
-            ax.scatter(mod360(x), mod360(y), s=10, alpha=0.6)
+            ax.scatter(mod360(x), mod360(y), s=10, alpha=0.5)
+            ax.plot([0,360],[0,360],'r--')   # ★追加
+
         ax.set_xlim(0, 360); ax.set_ylim(0, 360)
-        ax.set_xlabel(xl); ax.set_ylabel(yl); ax.set_title(ttl)
-        ax.grid(True, alpha=0.3); ax.set_aspect('equal', adjustable='box')
+        ax.set_xlabel(xl); ax.set_ylabel(yl)
+        ax.set_title(ttl)
+        ax.grid(True, alpha=0.3)
+        ax.set_aspect('equal', 'box')
 
     sp(axes[0], xs_true_ori,  ys_true_ori,  "true [deg]", "ori [deg]",   "ori vs true (frames)")
     sp(axes[1], xs_true_pred, ys_true_pred, "true [deg]", "pred [deg]",  "pred vs true (frames)")
-    sp(axes[2], xs_ori_pred,  ys_ori_pred, "ori [deg]",  "pred [deg]",  "pred vs ori (common frames)")
+    sp(axes[2], xs_ori_pred,  ys_ori_pred, "ori [deg]",  "pred [deg]",  "pred vs ori (frames)")
 
     plt.tight_layout()
     plt.savefig(out_png, dpi=250, bbox_inches='tight')
@@ -274,8 +290,8 @@ def collect_wave_level(entries: Sequence[dict], which: str):
     e_ori_true, e_pred_true, e_pred_ori = [], [], []
 
     for e in entries:
-        ( _, _, _, _, true_deg,
-          pred_mu, pred_med, ori_mu, ori_med) = extract_entry(e)
+        (_, _, _, _, true_deg,
+         pred_mu, pred_med, ori_mu, ori_med) = extract_entry(e)
 
         pred_r = pred_mu if which == "mean" else pred_med
         ori_r  = ori_mu  if which == "mean" else ori_med
@@ -292,7 +308,8 @@ def collect_wave_level(entries: Sequence[dict], which: str):
             e_pred_ori.append(abs(wrap_signed(np.array([pred_r - ori_r]))))
 
     def _cat(L):
-        if not L: return np.array([], dtype=float)
+        if not L:
+            return np.array([], dtype=float)
         return np.concatenate(L)
 
     return (np.asarray(trues, float),
@@ -305,32 +322,65 @@ def plot_wave_scatter(out_png: str,
                       ori_rep: np.ndarray,
                       pred_rep: np.ndarray,
                       title_suffix: str):
-    if true_list.size==0 and ori_rep.size==0 and pred_rep.size==0:
-        print(f"[SKIP] no waveform scatter data -> {out_png}")
-        return
 
-    fig, axes = plt.subplots(1, 3, figsize=(15, 5))
+    fig, axes = plt.subplots(1, 3, figsize=(21, 7))
     axes = axes.ravel()
 
     def sp(ax, x, y, xl, yl, ttl):
         mask = np.isfinite(x) & np.isfinite(y)
         if np.sum(mask) == 0:
-            ax.text(0.5, 0.5, "no data", ha='center', va='center', fontsize=12, color='gray')
+            ax.text(0.5, 0.5, "no data", ha='center', va='center',
+                    fontsize=12, color='gray')
         else:
-            ax.scatter(mod360(x[mask]), mod360(y[mask]), s=25, alpha=0.7)
-        ax.set_xlim(0, 360); ax.set_ylim(0, 360)
-        ax.set_xlabel(xl); ax.set_ylabel(yl); ax.set_title(ttl)
-        ax.grid(True, alpha=0.3); ax.set_aspect('equal', adjustable='box')
+            ax.scatter(mod360(x[mask]), mod360(y[mask]), s=25, alpha=0.5)
+            ax.plot([0,360],[0,360],'r--')   # ★追加
 
-    sp(axes[0], true_list, ori_rep,  "true [deg]", "ori rep. [deg]",  f"ori vs true ({title_suffix})")
-    sp(axes[1], true_list, pred_rep, "true [deg]", "pred rep. [deg]", f"pred vs true ({title_suffix})")
-    sp(axes[2], ori_rep,   pred_rep, "ori rep. [deg]", "pred rep. [deg]", f"pred vs ori ({title_suffix})")
+        ax.set_xlim(0,360); ax.set_ylim(0,360)
+        ax.set_xlabel(xl); ax.set_ylabel(yl)
+        ax.set_title(ttl)
+        ax.grid(True, alpha=0.3)
+        ax.set_aspect('equal','box')
+
+    sp(axes[0], true_list, ori_rep,  "true [deg]", "ori rep. [deg]",
+       f"ori vs true ({title_suffix})")
+    sp(axes[1], true_list, pred_rep, "true [deg]", "pred rep. [deg]",
+       f"pred vs true ({title_suffix})")
+    sp(axes[2], ori_rep,   pred_rep, "ori rep. [deg]", "pred rep. [deg]",
+       f"pred vs ori ({title_suffix})")
 
     plt.tight_layout()
     plt.savefig(out_png, dpi=250, bbox_inches='tight')
     plt.close()
     print("[OK] saved:", out_png)
 
+def plot_wave_pred_ori_only(out_png: str,
+                            ori_rep: np.ndarray,
+                            pred_rep: np.ndarray,
+                            title_suffix: str):
+
+    mask = np.isfinite(ori_rep) & np.isfinite(pred_rep)
+    if np.sum(mask) == 0:
+        print(f"[SKIP] no waveform pred-ori data -> {out_png}")
+        return
+
+    x = mod360(ori_rep[mask])
+    y = mod360(pred_rep[mask])
+
+    fig, ax = plt.subplots(figsize=(7,7))
+    ax.scatter(x, y, s=30, alpha=0.5)
+    ax.plot([0,360],[0,360],'r--')     # ★追加
+
+    ax.set_xlim(0,360); ax.set_ylim(0,360)
+    ax.set_xlabel("ori rep. [deg]")
+    ax.set_ylabel("pred rep. [deg]")
+    ax.set_title(f"pred vs ori ({title_suffix})")
+    ax.grid(True, alpha=0.3)
+    ax.set_aspect('equal','box')
+
+    plt.tight_layout()
+    plt.savefig(out_png, dpi=250, bbox_inches='tight')
+    plt.close()
+    print("[OK] saved:", out_png)
 
 # ====================== メイン ======================
 
@@ -344,7 +394,8 @@ def main():
     ap.add_argument("--ang_ylim", type=float, nargs=2, default=[0, 360])
 
     # 出力ON/OFF
-    ap.add_argument("--no_grids", action="store_true", help="角度グリッド（angles_pred_ori_grid.png）を出力しない")
+    ap.add_argument("--no_grids", action="store_true",
+                    help="角度グリッド（angles_pred_ori_grid.png）を出力しない")
     ap.add_argument("--no_scatter_frames", action="store_true")
     ap.add_argument("--no_wave_plots", action="store_true")
 
@@ -366,12 +417,12 @@ def main():
         "frame_abs_pred_true_mean_deg", "frame_abs_pred_true_std_deg",
         "frame_abs_pred_ori_mean_deg",  "frame_abs_pred_ori_std_deg",
         # Wave-level (mu)
-        "wave_abs_ori_mu_true_mean_deg",  "wave_abs_ori_mu_true_std_deg",
-        "wave_abs_pred_mu_true_mean_deg", "wave_abs_pred_mu_true_std_deg",
+        "wave_abs_ori_mu_true_mean_deg",   "wave_abs_ori_mu_true_std_deg",
+        "wave_abs_pred_mu_true_mean_deg",  "wave_abs_pred_mu_true_std_deg",
         "wave_abs_pred_mu_ori_mu_mean_deg","wave_abs_pred_mu_ori_mu_std_deg",
         # Wave-level (median)
-        "wave_abs_ori_med_true_mean_deg",  "wave_abs_ori_med_true_std_deg",
-        "wave_abs_pred_med_true_mean_deg", "wave_abs_pred_med_true_std_deg",
+        "wave_abs_ori_med_true_mean_deg",   "wave_abs_ori_med_true_std_deg",
+        "wave_abs_pred_med_true_mean_deg",  "wave_abs_pred_med_true_std_deg",
         "wave_abs_pred_med_ori_med_mean_deg","wave_abs_pred_med_ori_med_std_deg",
     ]
     summary_rows = []
@@ -379,8 +430,13 @@ def main():
     for pkl_path in tqdm(pkl_files, desc="EvalSuite"):
         # A) 角度グリッド
         if not args.no_grids:
-            plot_angles_grid(pkl_path, rows=args.rows, cols=args.cols,
-                             ylim=tuple(args.ang_ylim), dpi=args.dpi)
+            plot_angles_grid(
+                pkl_path,
+                rows=args.rows,
+                cols=args.cols,
+                ylim=tuple(args.ang_ylim),
+                dpi=args.dpi
+            )
 
         # B) フレームスキャッタ & 統計
         try:
@@ -433,7 +489,13 @@ def main():
 
         if not args.no_wave_plots:
             out_wave = os.path.join(exp_dir, "scatter_wave_all.png")
-            plot_wave_scatter(out_wave, true_mu, ori_mu, pred_mu, title_suffix="mean over time")
+            plot_wave_scatter(out_wave, true_mu, ori_mu, pred_mu,
+                              title_suffix="mean over time")
+
+            # ★ pred vs ori (mean) のみの図を追加
+            out_wave_pred_ori = os.path.join(exp_dir, "scatter_wave_pred_ori.png")
+            plot_wave_pred_ori_only(out_wave_pred_ori, ori_mu, pred_mu,
+                                    title_suffix="mean over time")
 
         # C') 波形（median）
         (true_md, ori_md, pred_md,
@@ -452,7 +514,13 @@ def main():
 
         if not args.no_wave_plots:
             out_wave_med = os.path.join(exp_dir, "scatter_wave_median_all.png")
-            plot_wave_scatter(out_wave_med, true_md, ori_md, pred_md, title_suffix="median over time")
+            plot_wave_scatter(out_wave_med, true_md, ori_md, pred_md,
+                              title_suffix="median over time")
+
+            # ★ pred vs ori (median) のみの図を追加
+            out_wave_med_pred_ori = os.path.join(exp_dir, "scatter_wave_median_pred_ori.png")
+            plot_wave_pred_ori_only(out_wave_med_pred_ori, ori_md, pred_md,
+                                    title_suffix="median over time")
 
         # CSV 行を追加
         rel_dir = os.path.relpath(exp_dir, root)

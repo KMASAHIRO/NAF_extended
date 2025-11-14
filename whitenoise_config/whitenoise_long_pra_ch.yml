@@ -1,4 +1,4 @@
-npz: NAF_logs/pra_ch_optuna/Pra_ch_param_94_1/loss_values/loss_epoch_00009.pkl
+npz: NAF_logs/pra_ch_optuna/Pra_ch_param_94_1/val_results/val_epoch_00009.npz
 fs: 16000
 seeds: [0]
 long_noise_seconds: 100.0
