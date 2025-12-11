@@ -8,6 +8,8 @@ stft_grid:
   - {nfft: 512,  hop: 256,  win: hann}
   - {nfft: 1024,  hop: 256,  win: hann}
   - {nfft: 1024,  hop: 512,  win: hann}
+  - {nfft: 2048,  hop: 512,  win: hann}
+  - {nfft: 2048,  hop: 1024,  win: hann}
 #  - {nfft: 512,  hop: 256,  win: hann}
 #  - {nfft: 512,  hop: 256,  win: none}
 #  - {nfft: 1024, hop: 512,  win: hann}

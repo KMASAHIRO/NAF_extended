@@ -7,6 +7,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import japanize_matplotlib
 import pyroomacoustics as pra
+import librosa  # ★ 追加
 
 # 全体のデフォルトは大きくしない or 控えめに
 plt.rcParams["font.size"] = 20
@@ -32,7 +33,6 @@ def angular_error_deg(a, b):
     diff = np.abs(a - b)
     return np.minimum(diff, 360 - diff)
 
-
 def compute_doa_from_spec(spec, mic_pos, algo_name="NormMUSIC", fs=16000, n_fft=512):
     """
     spec : (M, F, T) の複素 STFT
@@ -53,7 +53,6 @@ def compute_doa_from_spec(spec, mic_pos, algo_name="NormMUSIC", fs=16000, n_fft=
         est_idx = int(np.argmax(values))
 
     return est_idx, values
-
 
 def percentile_trim_mean_std(err_arr: np.ndarray, percentile: float):
     """
@@ -76,6 +75,60 @@ def percentile_trim_mean_std(err_arr: np.ndarray, percentile: float):
     return float(np.mean(trimmed)), float(np.std(trimmed))
 
 
+def istft_ir(spec: np.ndarray, nfft=512, hop=128, win="hann") -> np.ndarray:
+    """
+    spec: (G, F, T) complex
+    return: (G, Nt)
+    """
+    y = librosa.istft(
+        spec,
+        n_fft=nfft,
+        hop_length=hop,
+        win_length=nfft,
+        window=win,
+        center=True,
+    )
+    return y.astype(np.float32)
+
+
+def plot_8ch_waveforms(gt_wave: np.ndarray,
+                       pred_wave: np.ndarray,
+                       out_path: str,
+                       title: str = ""):
+    """
+    8ch波形を 4列×2行 にプロットする。
+    gt_wave, pred_wave : (C, Nt)
+    """
+    n_ch, Nt = gt_wave.shape
+    n_plot = min(8, n_ch)
+
+    fig, axes = plt.subplots(2, 4, figsize=(16, 8), constrained_layout=True)
+    axes = axes.ravel()
+
+    t = np.arange(Nt)  # サンプルインデックス（時間軸にしてもよい）
+
+    for ch in range(n_plot):
+        ax = axes[ch]
+        ax.plot(t, gt_wave[ch], color="orange", label="正解波形")
+        ax.plot(t, pred_wave[ch], color="blue", label="予測波形")
+        ax.set_title(f"Ch {ch}")
+        if ch // 4 == 1:
+            ax.set_xlabel("サンプルインデックス")
+        if ch % 4 == 0:
+            ax.set_ylabel("振幅")
+        ax.grid(True, alpha=0.3)
+
+    # 凡例は1つだけ
+    axes[0].legend(loc="upper right")
+
+    if title:
+        fig.suptitle(title)
+
+    plt.savefig(out_path, bbox_inches="tight", dpi=100)
+    plt.close(fig)
+    print(f"Saved waveform plot to {out_path}")
+
+
 def plot_doa_comparison_nao(yaml_path: str):
     config = load_yaml(yaml_path)
 
@@ -93,7 +146,7 @@ def plot_doa_comparison_nao(yaml_path: str):
     norm_epoch_for_stats = None
 
     # アルゴリズムごとに同じ処理を回す
-    #for algo_name in ["NormMUSIC", "SRP", "FRIDA"]:
+    # for algo_name in ["NormMUSIC", "SRP", "FRIDA"]:
     for algo_name in ["NormMUSIC"]:
         print(f"=== Running DoA evaluation with {algo_name} ===")
 
@@ -187,6 +240,10 @@ def plot_doa_comparison_nao(yaml_path: str):
         path, _, pred_best, gt_best, true_best, _, _ = best_result
         epoch = int(os.path.basename(path).split("_")[-1].split(".")[0])
 
+        best_data = np.load(path)
+        pred_spec_best_all = best_data["pred_sig_spec"]
+        ori_spec_best_all  = best_data["ori_sig_spec"]
+
         # NormMUSIC の epoch を stats ファイル名に使う
         if algo_name == "NormMUSIC":
             norm_epoch_for_stats = epoch
@@ -269,14 +326,9 @@ def plot_doa_comparison_nao(yaml_path: str):
         ax.set_ylim(0, 360)
         ax.set_aspect('equal', 'box')
         ax.set_xlabel("正解定位方向 [°]")
-        ax.set_ylabel("推定定位方向 [°]")
+        ax.set_ylabel("予測定位方向 [°]")
         ax.set_xticks(np.arange(0, 361, 50))
         ax.set_yticks(np.arange(0, 361, 50))
-        #ax.set_title(
-        #    f"{algo_name} DoA-A (pred vs gt)\n"
-        #    f"{err_pg_mean:.2f}° ± {err_pg_std:.2f}°",
-        #    fontsize=11
-        #)
         ax.grid(True, alpha=0.3)
 
         # 右: DoA-B (pred vs true)
@@ -287,20 +339,70 @@ def plot_doa_comparison_nao(yaml_path: str):
         ax.set_ylim(0, 360)
         ax.set_aspect('equal', 'box')
         ax.set_xlabel("真の音源方向 [°]")
-        ax.set_ylabel("推定定位方向 [°]")
+        ax.set_ylabel("予測定位方向 [°]")
         ax.set_xticks(np.arange(0, 361, 50))
         ax.set_yticks(np.arange(0, 361, 50))
-        #ax.set_title(
-        #    f"{algo_name} DoA-B (pred vs true)\n"
-        #    f"{err_pt_mean:.2f}° ± {err_pt_std:.2f}°",
-        #    fontsize=11
-        #)
         ax.grid(True, alpha=0.3)
 
         # ★ tight_layout() は呼ばず、bbox_inches="tight" で保存
         plt.savefig(fig_path, bbox_inches="tight", dpi=100)
         plt.close()
         print(f"[{algo_name}] Saved DoA-A/DoA-B figure to {fig_path}")
+
+        # === 8ch 波形プロット + 方向情報 ===
+        save_dir_all = os.path.join(out_dir, "waveforms_all_samples")
+        os.makedirs(save_dir_all, exist_ok=True)
+
+        # DoA-A の昇順ソート
+        sorted_indices = np.argsort(err_pg_arr)  # rank → sample index
+
+        # 方向情報 txt
+        dir_all_txt = os.path.join(save_dir_all, "directions_all_samples.txt")
+        with open(dir_all_txt, "w", encoding="utf-8") as ftxt:
+            ftxt.write("===== 全サンプル方向情報 (DoA-A 昇順) =====\n\n")
+
+        # 全サンプル処理ループ
+        for rank, i in enumerate(sorted_indices):
+            # i 番目の観測サンプルについて pred/gt のスペクトログラムを取得
+            if doa_ch > 1:
+                pred_group = pred_spec_best_all[i * doa_ch : (i + 1) * doa_ch]
+                ori_group  = ori_spec_best_all[i * doa_ch : (i + 1) * doa_ch]
+            else:
+                M = 8
+                idxs = np.arange(i * M, (i + 1) * M)
+                pred_group = pred_spec_best_all[idxs]
+                ori_group  = ori_spec_best_all[idxs]
+
+            # ISTFT 波形
+            gt_wave  = istft_ir(ori_group)
+            pred_wave = istft_ir(pred_group)
+
+            # 波形画像の保存
+            out_png = os.path.join(
+                save_dir_all, 
+                f"doaA_rank_{rank:04d}_idx_{i}.png"
+            )
+            plot_8ch_waveforms(
+                gt_wave,
+                pred_wave,
+                out_png,
+                title=f"DoA-A rank={rank}  idx={i}"
+            )
+
+            # 方向情報書き込み
+            true_i = true_best[i]
+            gt_i   = gt_best[i]
+            pred_i = pred_best[i]
+
+            with open(dir_all_txt, "a", encoding="utf-8") as ftxt:
+                ftxt.write(f"=== sample rank {rank} (idx={i}) ===\n")
+                ftxt.write(f"true_direction_deg (真の音源方向)     = {true_i:.6f}\n")
+                ftxt.write(f"gt_direction_deg   (正解波形のDoA)     = {gt_i:.6f}\n")
+                ftxt.write(f"pred_direction_deg (予測波形のDoA)     = {pred_i:.6f}\n")
+                ftxt.write("\n")
+
+        print(f"[{algo_name}] 全サンプルの波形を {save_dir_all} に保存しました")
+        print(f"[{algo_name}] 方向情報を {dir_all_txt} に保存しました")
 
         # === mean_err ± std_err とパーセンタイルを txt に保存 ===
         if stats_path is None:

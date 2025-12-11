@@ -2,6 +2,13 @@
 import os, glob, argparse
 import numpy as np
 import matplotlib.pyplot as plt
+import japanize_matplotlib
+
+plt.rcParams["font.size"] = 20
+plt.rcParams["axes.labelsize"] = 25
+plt.rcParams["axes.titlesize"] = 25
+plt.rcParams["xtick.labelsize"] = 20
+plt.rcParams["ytick.labelsize"] = 20
 
 def angular_error_deg(a, b):
     a = np.asarray(a) % 360.0
@@ -30,17 +37,19 @@ def main():
     true = np.concatenate(all_true)
     mae = float(angular_error_deg(pred, true).mean())
 
-    plt.figure(figsize=(7,6))
-    plt.scatter(true, pred, alpha=0.5, s=14)
+    plt.figure(figsize=(7,7))
+    plt.scatter(true, pred, alpha=0.5)
     plt.plot([0,360], [0,360], 'r--', linewidth=1)
     plt.xlim(0,360); plt.ylim(0,360)
+    plt.xticks(np.arange(0, 361, 50))
+    plt.yticks(np.arange(0, 361, 50))
     plt.gca().set_aspect('equal', 'box')
-    plt.xlabel("true (deg)")
-    plt.ylabel("pred (deg)")
-    plt.title(f"pred vs true (N={len(pred)}, MAE={mae:.2f}°)")
+    plt.xlabel("真の音源方向 [°]")
+    plt.ylabel("予測定位方向 [°]")
+    #plt.title(f"pred vs true (N={len(pred)}, MAE={mae:.2f}°)")
     save_path = os.path.join(args.out_dir, args.save_name)
     plt.tight_layout()
-    plt.savefig(save_path, dpi=150)
+    plt.savefig(save_path, dpi=100)
     plt.close()
     print(f"Saved: {save_path}")
 

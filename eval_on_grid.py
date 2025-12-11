@@ -106,16 +106,54 @@ def array_within_bounds(center_xy, radius, min_xy, max_xy):
     )
 
 
+def write_overall_from_errors(err_array, out_dir, tag=""):
+    """誤差配列から mean / std を計算して overall.txt に書き出すユーティリティ"""
+    err_array = np.asarray(err_array, dtype=np.float32)
+    mean_err = float(np.mean(err_array))
+    std_err  = float(np.std(err_array))
+    overall_path = os.path.join(out_dir, "overall.txt")
+    with open(overall_path, "w") as f:
+        f.write(f"mean_angular_error_deg={mean_err:.4f}\n")
+        f.write(f"std_angular_error_deg={std_err:.4f}\n")
+    if tag:
+        print(f"[{tag}] overall mean angular error = {mean_err:.4f}°, std = {std_err:.4f}°")
+    else:
+        print(f"[DONE] overall mean angular error = {mean_err:.4f}°, std = {std_err:.4f}°")
+
+
 @torch.no_grad()
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--config",       type=str, required=True)
-    ap.add_argument("--ckpt",         type=str, required=True)
+    ap.add_argument("--config",       type=str, required=False)
+    ap.add_argument("--ckpt",         type=str, required=False)
     ap.add_argument("--out_dir",      type=str, default=None)
     ap.add_argument("--fs",           type=int,   default=16000)
     ap.add_argument("--nfft",         type=int,   default=512)
     ap.add_argument("--array_radius", type=float, default=0.0365)  # 円形アレイ半径
+    # ★追加: 既存結果をロードして overall.txt だけ出力するモード
+    ap.add_argument("--load_only",    action="store_true",
+                    help="既存の circular_eval_all.npz をロードして統計だけ出力する")
     args = ap.parse_args()
+
+    # === load_only モード: 推論は一切せず、npz から err_deg を読んで mean/std を出すだけ ===
+    if args.load_only:
+        if args.out_dir is None:
+            raise ValueError("--load_only を使う場合は --out_dir を指定してください。")
+        out_dir = args.out_dir
+        npz_path = os.path.join(out_dir, "circular_eval_all.npz")
+        if not os.path.exists(npz_path):
+            raise FileNotFoundError(f"npz が見つかりません: {npz_path}")
+        data = np.load(npz_path)
+        if "err_deg" not in data:
+            raise KeyError("circular_eval_all.npz に 'err_deg' が含まれていません。")
+        err_array = data["err_deg"]
+        write_overall_from_errors(err_array, out_dir, tag="LOAD_ONLY")
+        return
+
+    # ここから先は通常モード（推論を走らせる）
+
+    if args.config is None or args.ckpt is None:
+        raise ValueError("--config と --ckpt は通常モードでは必須です。")
 
     # 固定Tx座標（8点）
     tx_list = np.array([
@@ -137,8 +175,6 @@ def main():
     rx_grid = []
     for x in rx_x_vals:
         for y in rx_y_vals:
-            if (float(x), float(y)) in tx_set:
-                continue  # Txと同一座標は除外
             rx_grid.append(np.array([x, y], dtype=float))
     rx_grid = np.array(rx_grid, dtype=float)  # (N_rx, 2)
 
@@ -173,7 +209,6 @@ def main():
     PIXEL_COUNT_val = freqs_tmpl.shape[1]
 
     # 集約バッファ
-    # もともとの radius, theta_deg を rx_x, rx_y に変更
     summary_lines = ["idx,tx_x,tx_y,rx_x,rx_y,used,err_deg\n"]
 
     if doa_ch_conf > 1:
@@ -183,6 +218,10 @@ def main():
 
         for tx_xy in tx_list:
             for rx_center in rx_grid:
+                # ★同じ検証内で tx と rx が同一座標ならスキップ
+                if np.allclose(rx_center, tx_xy, atol=1e-6):
+                    continue
+
                 # アレイ中心が室内に収まるか（円形アレイが内包されるか）
                 if not array_within_bounds(rx_center, args.array_radius, min_xy, max_xy):
                     summary_lines.append(
@@ -293,6 +332,10 @@ def main():
 
         for tx_xy in tx_list:
             for center_xy in rx_grid:
+                # ★同じ検証内で tx と rx(center) が同一座標ならスキップ
+                if np.allclose(center_xy, tx_xy, atol=1e-6):
+                    continue
+
                 # アレイが室内に収まるか
                 if not array_within_bounds(center_xy, args.array_radius, min_xy, max_xy):
                     summary_lines.append(
@@ -408,10 +451,9 @@ def main():
 
     used_rows = [line for line in summary_lines[1:] if ",1," in line]
     if used_rows:
-        overall = float(np.mean([float(line.strip().split(",")[-1]) for line in used_rows]))
-        with open(os.path.join(out_dir, "overall.txt"), "w") as f:
-            f.write(f"mean_angular_error_deg={overall:.4f}\n")
-        print(f"[DONE] overall mean angular error = {overall:.4f}°")
+        # used==1 の行の err_deg を取り出して mean/std を計算
+        err_vals = [float(line.strip().split(",")[-1]) for line in used_rows]
+        write_overall_from_errors(err_vals, out_dir)
     else:
         print("[DONE] No usable samples (all out-of-bounds).")
 
